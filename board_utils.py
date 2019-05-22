@@ -36,6 +36,14 @@ class Board():
 
         return possible_moves
 
+    def run_move(self, move, color):
+        flips = (
+            flip for direction in self.directions for flip in self.apply_flips(move, direction, color)
+        )
+
+        for x,y in flips:
+            self.board[x][y] = color
+
     def search_move(self, origin, direction):
         x,y = origin
         color = self.board[x][y]
@@ -49,8 +57,30 @@ class Board():
             elif self.board[x][y] == self.get_contrary_color(color):
                 flips.append((x,y))
 
+    def apply_flips(self, origin, direction, color):
+        flips = [origin]
+
+        for x,y in self.augment_move(origin, direction):
+            if self.board[x][y] == self.get_contrary_color(color):
+                flips.append((x,y))
+            elif self.board[x][y] == 0:
+                break
+            elif len(flips) > 1 and self.board[x][y] == color:
+                return flips
+
+        return []
+
     def get_contrary_color(self, color):
         return 1 if color == 2 else 2
+
+    def count_tiles(self, color):
+        count = 0
+        for y in range(8):
+            for x in range(8):
+                if self.board[x][y] == color:
+                    count += 1
+        
+        return count
 
     @staticmethod
     def augment_move(move, direction):
