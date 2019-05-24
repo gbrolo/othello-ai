@@ -21,6 +21,9 @@ def show_board(board):
     b.board = b.numpyfy_board(board)
     print(b.board)
 
+    print('Player 1 captured tiles: ', b.count_tiles(1))
+    print('Player 2 captured tiles: ', b.count_tiles(2))
+
 def select_first_possibility(moves):
     move = random.choice(moves)
     print(move)

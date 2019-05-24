@@ -1,11 +1,13 @@
 import random
 from board_utils import *
 from copy import deepcopy
+import timeit
 
 class AI():
     def __init__(self):
         self.inf = float('inf')
         self.b_list = [0, 0, 0]
+        self.depth = 4
         self.weights = [
              4, -3,  2,  2,  2,  2, -3,  4,
             -3, -4, -1, -1, -1, -1, -4, -3,
@@ -18,10 +20,10 @@ class AI():
         ]
 
     def retrieve_move(self, board, color, movement_number=None, remaining_time=None):
-        return self.minimax_alpha_beta(board, color, movement_number, remaining_time, 4)
+        return self.minimax_alpha_beta(board, color, movement_number, remaining_time, self.depth)
 
     def heuristic(self, board, color):
-        return 2 * self.corner_weight(color, board) + 2 * self.get_cost(board, color)
+        return 2 * self.corner_weight(color, board) + 3 * self.get_cost(board, color)
 
     def corner_weight(self, color, board):
         total = 0
@@ -42,6 +44,7 @@ class AI():
         return current_color - contrary_color
 
     def greedy_choice(self, board, color, move):
+        print('Greedy choice')
         new_board = deepcopy(board)
         new_board.run_move(move, color)
 
@@ -115,11 +118,18 @@ class AI():
 
         move = moves[0]
         best_score = -self.inf
-
-        if remaining_time < 5:
-            return(max(moves, key=lambda x: self.greedy_choice(board, color, x)))
+        
+        # print('Received time is ', remaining_time)
         
         for m in moves:
+            current_time = timeit.default_timer()
+            # print('Current time is ', current_time)
+            time_diff = current_time - remaining_time
+            # print('Time diff is: ', time_diff)
+
+            if time_diff >= 1.2:
+                return(max(moves, key=lambda x: self.greedy_choice(board, color, x)))        
+
             new_board = deepcopy(board)
             new_board.run_move(m, color)
             self.b_list[0] += 1
@@ -135,6 +145,6 @@ class AI():
 
             if score > best_score:
                 best_score = score
-                move = m
+                move = m        
 
         return move

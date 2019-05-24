@@ -1,4 +1,5 @@
 import socketio
+import threading
 from game_mechanics import *
 
 class ClientHandler():
@@ -73,7 +74,7 @@ def finish(data):
 # emit signals
 def emit_sign_in():
     user_name = raw_input('Please provide a username: ')    
-    mode = raw_input('Select a mode: 1. Minimax with Alpha Beta 2. Random choice')
+    mode = raw_input('Select a mode: 1. Minimax with Alpha Beta 2. Random choice ')
     client.mode = 'ALPHA_BETA' if mode == '1' else 'RANDOM'
 
     socket.emit('signin', {
@@ -81,6 +82,9 @@ def emit_sign_in():
         'tournament_id': client.TOURNAMENT_ID,
         'user_role': 'player'
     })
+
+    x = threading.Thread(target=disconnect_user_signal)
+    x.start()
 
 def emit_play(player_turn_id, tournament_id, game_id, movement):
     socket.emit('play', {
@@ -96,6 +100,12 @@ def emit_player_ready(player_turn_id, game_id):
         'player_turn_id': player_turn_id,
         'game_id': game_id
     })
+
+def disconnect_user_signal():
+    signal = raw_input('')
+    if (signal == '*'):
+        print('User logging out')
+        socket.disconnect()
 
 # connect to server
 socket.connect('http://localhost:4000')
