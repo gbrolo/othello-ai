@@ -33,11 +33,9 @@ def on_ok_signin():
     print('Login succesfull') 
 
 @socket.on('ready')
-def on_ready(data):
-    print('Ready signal received')
-    print('data received: ', data)
-
-    move = ''
+def on_ready(data):    
+    print('Game: ' + str(data['game_id']) + ', Movement: ' + str(data['movementNumber']) + ', Color: ' + str(data['player_turn_id']))
+    move = None
 
     if client.mode == 'ALPHA_BETA':
         move = make_a_move(data['board'], data['player_turn_id'])
@@ -56,8 +54,7 @@ def on_ready(data):
     )
 
 @socket.on('finish')
-def finish(data):
-    print('finish data: ', data)
+def finish(data):    
     game_id = data['game_id']
     winner_turn_id = 0
     if data.has_key('winner_turn_id'):
@@ -65,8 +62,7 @@ def finish(data):
     # player_turn_id = data['player_turn_id']
     board = data['board']
 
-    print('Finished game: ', game_id)
-    print('Winner, player: ', winner_turn_id)
+    print('Finished game: ' + str(game_id) + ', Winner: ' + str(winner_turn_id))    
     show_board(board)
 
     emit_player_ready(client.player_turn_id, game_id)

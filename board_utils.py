@@ -1,6 +1,4 @@
 import numpy as np
-INITIAL_BOARD = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-DIRECTIONS = [(1,1),(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1),(0,1)]
 
 class Board():
 
@@ -11,18 +9,18 @@ class Board():
     def numpyfy_board(self, board):    
         return np.reshape(np.array(board), (8, 8))
 
-    def get_squares(self, color):
-        squares = []
+    def get_tiles(self, color):
+        tiles = []
 
         for y in range(8):
             for x in range(8):
                 if self.board[x][y] == color:
-                    squares.append((x,y))
+                    tiles.append((x,y))
         
-        return squares
+        return tiles
 
-    def get_moves_square(self, square):
-        (x,y) = square
+    def get_moves_tile(self, tile):
+        (x,y) = tile
         color = self.board[x][y]
 
         if color == 0:
@@ -30,7 +28,7 @@ class Board():
 
         possible_moves = []
         for direction in self.directions:
-            move = self.search_move(square, direction)
+            move = self.search_move(tile, direction)
             if move:
                 possible_moves.append(move)
 
@@ -44,12 +42,12 @@ class Board():
         for x,y in flips:
             self.board[x][y] = color
 
-    def search_move(self, origin, direction):
-        x,y = origin
+    def search_move(self, tile, direction):
+        x,y = tile
         color = self.board[x][y]
         flips = []
 
-        for x,y in self.augment_move(origin, direction):
+        for x,y in self.augment_move(tile, direction):
             if self.board[x][y] == 0 and flips:
                 return (x,y)
             elif (self.board[x][y] == color or (self.board[x][y] == 0 and not flips)):
@@ -57,10 +55,10 @@ class Board():
             elif self.board[x][y] == self.get_contrary_color(color):
                 flips.append((x,y))
 
-    def apply_flips(self, origin, direction, color):
-        flips = [origin]
+    def apply_flips(self, tile, direction, color):
+        flips = [tile]
 
-        for x,y in self.augment_move(origin, direction):
+        for x,y in self.augment_move(tile, direction):
             if self.board[x][y] == self.get_contrary_color(color):
                 flips.append((x,y))
             elif self.board[x][y] == 0:
@@ -73,28 +71,21 @@ class Board():
     def get_contrary_color(self, color):
         return 1 if color == 2 else 2
 
-    def count_tiles(self, color):
-        count = 0
-        for y in range(8):
-            for x in range(8):
-                if self.board[x][y] == color:
-                    count += 1
-        
-        return count
+    def count_tiles(self, color):               
+        return np.reshape(self.board.tolist(), (1, 64))[0].tolist().count(color)
 
     @staticmethod
     def augment_move(move, direction):
         move = map(sum, zip(move, direction))
-
-        while all(map(lambda x: 0 <= x < 8, move)):
+        while all(map(lambda x: 0 <= x <= 7, move)):
             yield move
             move = map(sum, zip(move, direction))
 
     def get_legal_moves(self, color):
         moves = set()
 
-        for square in self.get_squares(color):
-            updated_moves = self.get_moves_square(square)
+        for tile in self.get_tiles(color):
+            updated_moves = self.get_moves_tile(tile)
             moves.update(updated_moves)
 
         return list(moves)

@@ -6,8 +6,7 @@ import timeit
 class AI():
     def __init__(self):
         self.inf = float('inf')
-        self.b_list = [0, 0, 0]
-        self.depth = 4
+        self.b_list = [0, 0, 0]        
         self.weights = [
              4, -3,  2,  2,  2,  2, -3,  4,
             -3, -4, -1, -1, -1, -1, -4, -3,
@@ -19,21 +18,16 @@ class AI():
              4, -3,  2,  2,  2,  2, -3,  4
         ]
 
-    def retrieve_move(self, board, color, movement_number=None, remaining_time=None):
-        return self.minimax_alpha_beta(board, color, movement_number, remaining_time, self.depth)
-
     def heuristic(self, board, color):
         return 2 * self.corner_weight(color, board) + 3 * self.get_cost(board, color)
 
     def corner_weight(self, color, board):
         total = 0
+        b = np.reshape(board.board.tolist(), (1, 64))[0].tolist()
         for i in range(0, 64):
-            if board.board[i / 8][i % 8] == color:
-                total += self.weights[i]
-            if board.board[i / 8][i % 8] == board.get_contrary_color(color):
-                total -= self.weights[i]
-            
-        return total
+            total = total + 1 if b[i] == color else total - 1 if b[i] == board.get_contrary_color(color) else total            
+
+        return total    
 
     def get_cost(self, board, color):
         current_color = board.count_tiles(color)
@@ -55,7 +49,7 @@ class AI():
 
         return current_color - contrary_color
 
-    def max_score(self, board, contrary_color, movement_number, depth, alpha, beta):
+    def max_score(self, board, contrary_color, depth, alpha, beta):
         if depth == 0:
             return self.heuristic(board, contrary_color)
 
@@ -67,8 +61,7 @@ class AI():
 
             score = self.min_score(
                 new_board,
-                board.get_contrary_color(contrary_color),
-                movement_number,
+                board.get_contrary_color(contrary_color),                
                 depth - 1,
                 alpha,
                 beta
@@ -84,7 +77,7 @@ class AI():
 
         return best_score
 
-    def min_score(self, board, contrary_color, movement_number, depth, alpha, beta):
+    def min_score(self, board, contrary_color, depth, alpha, beta):
         if depth == 0:
             return self.heuristic(board, contrary_color)
 
@@ -96,8 +89,7 @@ class AI():
 
             score = self.max_score(
                 new_board, 
-                board.get_contrary_color(contrary_color),
-                movement_number,
+                board.get_contrary_color(contrary_color),                
                 depth - 1,
                 alpha,
                 beta
@@ -113,21 +105,17 @@ class AI():
         return best_score
 
 
-    def minimax_alpha_beta(self, board, color, movement_number, remaining_time, depth=4):
+    def minimax_alpha_beta(self, board, color, remaining_time, depth=4):
         moves = board.get_legal_moves(color)
 
         move = moves[0]
-        best_score = -self.inf
-        
-        # print('Received time is ', remaining_time)
+        best_score = -self.inf                
         
         for m in moves:
-            current_time = timeit.default_timer()
-            # print('Current time is ', current_time)
-            time_diff = current_time - remaining_time
-            # print('Time diff is: ', time_diff)
+            current_time = timeit.default_timer()            
+            time_diff = current_time - remaining_time            
 
-            if time_diff >= 1.2:
+            if time_diff >= 1.5:
                 return(max(moves, key=lambda x: self.greedy_choice(board, color, x)))        
 
             new_board = deepcopy(board)
@@ -136,8 +124,7 @@ class AI():
 
             score = self.min_score(
                 new_board,
-                board.get_contrary_color(color),
-                movement_number,
+                board.get_contrary_color(color),                
                 depth - 1,
                 -self.inf,
                 self.inf
