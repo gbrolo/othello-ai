@@ -5,8 +5,8 @@ import timeit
 
 class AI():
     def __init__(self):
-        self.inf = float('inf')
-        self.b_list = [0, 0, 0]        
+        self.inf = float('inf')        
+        # heuristic weights got from paper 'An Analysis of Heuristics in Othello'        
         self.weights = [
              4, -3,  2,  2,  2,  2, -3,  4,
             -3, -4, -1, -1, -1, -1, -4, -3,
@@ -19,7 +19,10 @@ class AI():
         ]
 
     def heuristic(self, board, color):
-        return 2 * self.corner_weight(color, board) + 3 * self.get_cost(board, color)
+        if (color == 2):
+            return self.corner_weight(color, board) + 8 * self.get_cost(color, board) + 4 * self.corner_ocupancies(color, board)
+        elif (color == 1):
+            return self.corner_weight(color, board) + 4 * self.get_cost(color, board) + 8 * self.corner_ocupancies(color, board)
 
     def corner_weight(self, color, board):
         total = 0
@@ -29,13 +32,42 @@ class AI():
 
         return total    
 
-    def get_cost(self, board, color):
+    def corner_ocupancies(self, color, board):
+        contrary_color = board.get_contrary_color(color)
+        tiles = 0
+        contrary_tiles = 0
+
+        corners = [
+            board.board[0][0],
+            board.board[0][7],
+            board.board[7][0],
+            board.board[7][7],
+        ]
+
+        for corner in corners:
+            if (corner == color):
+                tiles += 1
+            elif (corner == contrary_color):
+                contrary_tiles += 1
+
+        return 25 * (tiles - contrary_tiles)
+
+    def get_cost(self, color, board):
         current_color = board.count_tiles(color)
         contrary_color = board.count_tiles(
             board.get_contrary_color(color)
         )
 
         return current_color - contrary_color
+
+    def select_greedy_type(self, color, board):
+        tiles_vs_opponent = self.get_cost(color, board)
+        blank_tiles = board.count_tiles(0)
+
+        if tiles_vs_opponent <= 0 and tiles_vs_opponent <= blank_tiles:
+            return True
+        else:
+            return False
 
     def greedy_choice(self, board, color, move):
         print('Greedy choice')
@@ -115,12 +147,16 @@ class AI():
             current_time = timeit.default_timer()            
             time_diff = current_time - remaining_time            
 
-            if time_diff >= 1.5:
-                return(max(moves, key=lambda x: self.greedy_choice(board, color, x)))        
+            if time_diff >= 1.0:
+                # greedy_type = random.randint(1,2)
+                if (not self.select_greedy_type(color, board)):
+                    print('Greedy random')                                    
+                    return select_random_possibility(board, color)
+                else:
+                    return(max(moves, key=lambda x: self.greedy_choice(board, color, x)))        
 
             new_board = deepcopy(board)
-            new_board.run_move(m, color)
-            self.b_list[0] += 1
+            new_board.run_move(m, color)            
 
             score = self.min_score(
                 new_board,
@@ -135,3 +171,6 @@ class AI():
                 move = m        
 
         return move
+
+def select_random_possibility(board, player_turn_id):
+    return random.choice(board.get_legal_moves(player_turn_id))
